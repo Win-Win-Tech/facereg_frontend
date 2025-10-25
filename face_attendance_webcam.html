@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Face Attendance</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { margin-top: 40px; }
+    #response { margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; }
+    .success { color: green; }
+    .error { color: red; }
+    video, canvas { display: block; margin-top: 10px; max-width: 100%; }
+    button { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Register Employee</h2>
+  <form id="registerForm">
+    <input type="text" name="name" placeholder="Employee Name" required />
+    <input type="file" name="image" accept="image/*" required />
+    <button type="submit">Register</button>
+  </form>
+
+  <h2>Mark Attendance via Webcam</h2>
+  <video id="video" width="320" height="240" autoplay></video>
+  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+  <button id="captureBtn">Capture & Mark Attendance</button>
+
+  <div id="response"></div>
+
+  <script>
+    const registerForm = document.getElementById('registerForm');
+    const responseDiv = document.getElementById('response');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('captureBtn');
+
+    function showResponse(data) {
+      responseDiv.innerHTML = '';
+      if (data.status) {
+        responseDiv.innerHTML = `<p class="success"><strong>Status:</strong> ${data.status}</p>`;
+        if (data.employee) {
+          responseDiv.innerHTML += `<p><strong>Employee:</strong> ${data.employee}</p>`;
+        }
+        if (data.confidence !== undefined) {
+          responseDiv.innerHTML += `<p><strong>Confidence:</strong> ${data.confidence}</p>`;
+        }
+      } else if (data.error) {
+        responseDiv.innerHTML = `<p class="error"><strong>Error:</strong> ${data.error}</p>`;
+      } else {
+        responseDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+      }
+    }
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(registerForm);
+      const res = await fetch('http://localhost:8000/api/register/', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      showResponse(data);
+    });
+
+    // Webcam setup
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        console.error("Webcam access error:", err);
+        responseDiv.innerHTML = `<p class="error">Webcam access denied</p>`;
+      });
+
+    captureBtn.addEventListener('click', async () => {
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(async (blob) => {
+        const formData = new FormData();
+        formData.append('image', blob, 'webcam.jpg');
+
+        const res = await fetch('http://localhost:8000/api/attendance/', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        showResponse(data);
+      }, 'image/jpeg');
+    });
+  </script>
+</body>
+</html>

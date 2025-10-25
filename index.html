@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Face Attendance</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { margin-top: 40px; }
+    #response { margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h2>Register Employee</h2>
+  <form id="registerForm">
+    <input type="text" name="name" placeholder="Employee Name" required />
+    <input type="file" name="image" accept="image/*" required />
+    <button type="submit">Register</button>
+  </form>
+
+  <h2>Mark Attendance</h2>
+  <form id="attendanceForm">
+    <input type="file" name="image" accept="image/*" required />
+    <button type="submit">Mark Attendance</button>
+  </form>
+
+  <div id="response"></div>
+
+  <script>
+    const registerForm = document.getElementById('registerForm');
+    const attendanceForm = document.getElementById('attendanceForm');
+    const responseDiv = document.getElementById('response');
+
+    function showResponse(data) {
+      responseDiv.innerHTML = ''; // Clear previous
+      if (data.status) {
+        responseDiv.innerHTML = `<p class="success"><strong>Status:</strong> ${data.status}</p>`;
+        if (data.employee) {
+          responseDiv.innerHTML += `<p><strong>Employee:</strong> ${data.employee}</p>`;
+        }
+        if (data.confidence !== undefined) {
+          responseDiv.innerHTML += `<p><strong>Confidence:</strong> ${data.confidence}</p>`;
+        }
+      } else if (data.error) {
+        responseDiv.innerHTML = `<p class="error"><strong>Error:</strong> ${data.error}</p>`;
+      } else {
+        responseDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+      }
+    }
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(registerForm);
+      const res = await fetch('http://localhost:8000/api/register/', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      showResponse(data);
+    });
+
+    attendanceForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(attendanceForm);
+      const res = await fetch('http://localhost:8000/api/attendance/', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      showResponse(data);
+    });
+  </script>
+</body>
+</html>
