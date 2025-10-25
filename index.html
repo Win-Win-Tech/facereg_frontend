@@ -51,7 +51,8 @@
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(registerForm);
-      const res = await fetch('http://localhost:8000/api/register/', {
+      //const res = await fetch('http://localhost:8000/api/register/', {
+      const res = await fetch('http://147.93.27.224:8002/api/register/', {
         method: 'POST',
         body: formData
       });
@@ -62,7 +63,8 @@
     attendanceForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(attendanceForm);
-      const res = await fetch('http://localhost:8000/api/attendance/', {
+      //const res = await fetch('http://localhost:8000/api/attendance/', {
+      const res = await fetch('http://147.93.27.224:8002/api/attendance/', {
         method: 'POST',
         body: formData
       });
